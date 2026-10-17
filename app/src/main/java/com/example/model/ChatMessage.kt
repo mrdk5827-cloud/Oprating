@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.automation.FixaAction
 import java.util.UUID
 
 enum class MessageSender {
@@ -20,7 +21,9 @@ data class ChatMessage(
     val timestamp: Long = System.currentTimeMillis(),
     val language: AssistantLanguage = AssistantLanguage.AUTO,
     val category: String? = null,
-    val isStreaming: Boolean = false
+    val isStreaming: Boolean = false,
+    val action: FixaAction? = null,
+    val actionExecuted: Boolean = false
 )
 
 data class KnowledgePrompt(
@@ -30,4 +33,13 @@ data class KnowledgePrompt(
     val prompt: String,
     val category: String,
     val iconName: String
+)
+
+data class AutomationShortcut(
+    val id: String,
+    val title: String,
+    val hindiTitle: String,
+    val command: String,
+    val iconName: String,
+    val category: String
 )

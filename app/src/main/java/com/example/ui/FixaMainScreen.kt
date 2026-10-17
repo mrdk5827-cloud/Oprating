@@ -6,15 +6,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,21 +37,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -69,6 +75,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -85,16 +95,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.automation.FixaAction
+import com.example.automation.FixaActionManager
 import com.example.model.AssistantLanguage
 import com.example.model.ChatMessage
 import com.example.model.MessageSender
-import kotlinx.coroutines.launch
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -104,7 +116,6 @@ fun FixaMainScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     val messages by viewModel.messages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -113,9 +124,9 @@ fun FixaMainScreen(
     val hasOverlayPermission by viewModel.hasOverlayPermission.collectAsState()
     val showInAppBubble by viewModel.showInAppBubble.collectAsState()
     val isSpeaking by viewModel.ttsManager.isSpeaking.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
 
     var inputText by remember { mutableStateOf("") }
-    var selectedCategoryFilter by remember { mutableStateOf<String?>(null) }
     var showQuickDialogInApp by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
@@ -148,90 +159,150 @@ fun FixaMainScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SmartToy,
-                                    contentDescription = "Fixa Logo",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Fixa AI",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                        color = Color.White
+                Column {
+                    TopAppBar(
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(Color(0xFF6366F1), Color(0xFF06B6D4))
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SmartToy,
+                                        contentDescription = "Fixa Logo",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(22.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(0xFF06B6D4).copy(alpha = 0.2f))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "GEMINI 3.5",
-                                            color = Color(0xFF38BDF8),
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
                                 }
-                                Text(
-                                    text = "फ्लोटिंग AI असिस्टेंट • हर सवाल का जवाब",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFF94A3B8)
-                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "Fixa AI",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 17.sp,
+                                            color = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color(0xFF06B6D4).copy(alpha = 0.2f))
+                                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "ACTIONS & AI",
+                                                color = Color(0xFF38BDF8),
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = "फ्लोटिंग AI असिस्टेंट • ऑटोमेशन • सारा ज्ञान",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
                             }
-                        }
-                    },
-                    actions = {
-                        if (isSpeaking) {
+                        },
+                        actions = {
+                            if (isSpeaking) {
+                                IconButton(
+                                    onClick = { viewModel.ttsManager.stop() },
+                                    modifier = Modifier.testTag("stop_speaking_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Stop,
+                                        contentDescription = "Stop Voice",
+                                        tint = Color(0xFFEF4444)
+                                    )
+                                }
+                            }
                             IconButton(
-                                onClick = { viewModel.ttsManager.stop() },
-                                modifier = Modifier.testTag("stop_speaking_button")
+                                onClick = { viewModel.clearMessages() },
+                                modifier = Modifier.testTag("clear_chat_button")
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Stop,
-                                    contentDescription = "Stop Voice",
-                                    tint = Color(0xFFEF4444)
+                                    imageVector = Icons.Default.DeleteSweep,
+                                    contentDescription = "Clear Chat",
+                                    tint = Color(0xFF94A3B8)
                                 )
                             }
-                        }
-                        IconButton(
-                            onClick = { viewModel.clearMessages() },
-                            modifier = Modifier.testTag("clear_chat_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteSweep,
-                                contentDescription = "Clear Chat",
-                                tint = Color(0xFF94A3B8)
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color(0xFF0F172A)
+                        )
+                    )
+
+                    // Navigation Tabs: AI Chat vs Automation Hub
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color(0xFF0F172A),
+                        contentColor = Color(0xFF38BDF8),
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = Color(0xFF38BDF8),
+                                height = 3.dp
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF0F172A)
-                    )
-                )
+                    ) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { viewModel.setSelectedTab(0) },
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = if (selectedTab == 0) Color(0xFF38BDF8) else Color(0xFF64748B)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "AI Chat & Floating",
+                                        color = if (selectedTab == 0) Color.White else Color(0xFF94A3B8),
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        )
+
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { viewModel.setSelectedTab(1) },
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.TouchApp,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = if (selectedTab == 1) Color(0xFF34D399) else Color(0xFF64748B)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "WhatsApp & Actions",
+                                        color = if (selectedTab == 1) Color.White else Color(0xFF94A3B8),
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
             },
             bottomBar = {
-                // Input Bar
+                // Input Bar (visible in both tabs so user can always command Fixa!)
                 Surface(
                     color = Color(0xFF0F172A),
                     tonalElevation = 8.dp,
@@ -254,9 +325,10 @@ fun FixaMainScreen(
                                     .testTag("chat_input_field"),
                                 placeholder = {
                                     Text(
-                                        text = "Fixa से पूछें (हिंदी या English)...",
+                                        text = if (selectedTab == 1) "कमांड दें (उदा: Rahul ko whatsapp message karo)..." else "Fixa से पूछें या कमांड दें...",
                                         color = Color(0xFF64748B),
-                                        fontSize = 13.sp
+                                        fontSize = 12.sp,
+                                        maxLines = 1
                                     )
                                 },
                                 shape = RoundedCornerShape(24.dp),
@@ -272,7 +344,7 @@ fun FixaMainScreen(
                                 maxLines = 4
                             )
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             // Voice Mic Button
                             IconButton(
@@ -281,7 +353,7 @@ fun FixaMainScreen(
                                         val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                                             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Fixa को अपना सवाल बताएं...")
+                                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Fixa को अपना सवाल या कमांड बताएं...")
                                         }
                                         voiceLauncher.launch(speechIntent)
                                     } catch (e: Exception) {
@@ -289,7 +361,7 @@ fun FixaMainScreen(
                                     }
                                 },
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(42.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFF334155))
                                     .testTag("voice_input_button")
@@ -298,11 +370,11 @@ fun FixaMainScreen(
                                     imageVector = Icons.Default.Mic,
                                     contentDescription = "Voice Input",
                                     tint = Color(0xFF38BDF8),
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             // Send Button
                             IconButton(
@@ -310,11 +382,14 @@ fun FixaMainScreen(
                                     if (inputText.isNotBlank()) {
                                         viewModel.sendMessage(inputText)
                                         inputText = ""
+                                        if (selectedTab != 0) {
+                                            viewModel.setSelectedTab(0)
+                                        }
                                     }
                                 },
                                 enabled = inputText.isNotBlank() && !isLoading,
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(42.dp)
                                     .clip(CircleShape)
                                     .background(
                                         if (inputText.isNotBlank()) {
@@ -333,7 +408,7 @@ fun FixaMainScreen(
                                     imageVector = Icons.AutoMirrored.Filled.Send,
                                     contentDescription = "Send Message",
                                     tint = if (inputText.isNotBlank()) Color.White else Color(0xFF94A3B8),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -342,140 +417,146 @@ fun FixaMainScreen(
             },
             containerColor = Color(0xFF0B0F19)
         ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                state = listState,
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // 1. Floating Screen Assistant Master Card
-                item {
-                    FloatingAssistantHeroCard(
-                        isFloatingEnabled = isFloatingServiceEnabled,
-                        hasPermission = hasOverlayPermission,
-                        showInAppBubble = showInAppBubble,
-                        onToggleFloating = { enable ->
-                            if (!hasOverlayPermission) {
+            if (selectedTab == 0) {
+                // TAB 0: Main AI Chat & Floating Screen Assistant
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Floating Screen Assistant Master Card
+                    item {
+                        FloatingAssistantHeroCard(
+                            isFloatingEnabled = isFloatingServiceEnabled,
+                            hasPermission = hasOverlayPermission,
+                            showInAppBubble = showInAppBubble,
+                            onToggleFloating = { enable ->
+                                if (!hasOverlayPermission) {
+                                    val intent = Intent(
+                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        Uri.parse("package:${context.packageName}")
+                                    )
+                                    overlayPermissionLauncher.launch(intent)
+                                } else {
+                                    viewModel.toggleFloatingService(enable)
+                                }
+                            },
+                            onGrantPermission = {
                                 val intent = Intent(
                                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                     Uri.parse("package:${context.packageName}")
                                 )
                                 overlayPermissionLauncher.launch(intent)
-                            } else {
-                                viewModel.toggleFloatingService(enable)
+                            },
+                            onToggleInAppBubble = { enable ->
+                                viewModel.toggleInAppBubble(enable)
                             }
-                        },
-                        onGrantPermission = {
-                            val intent = Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:${context.packageName}")
-                            )
-                            overlayPermissionLauncher.launch(intent)
-                        },
-                        onToggleInAppBubble = { enable ->
-                            viewModel.toggleInAppBubble(enable)
-                        }
-                    )
-                }
+                        )
+                    }
 
-                // 2. Bilingual Language Mode Pills
-                item {
-                    LanguageSelectorBar(
-                        selectedLanguage = selectedLanguage,
-                        onLanguageSelected = { viewModel.setLanguage(it) }
-                    )
-                }
+                    // Bilingual Language Mode Pills
+                    item {
+                        LanguageSelectorBar(
+                            selectedLanguage = selectedLanguage,
+                            onLanguageSelected = { viewModel.setLanguage(it) }
+                        )
+                    }
 
-                // 3. Knowledge & Problem-Solving Quick Topics
-                item {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    // Knowledge & Problem-Solving Quick Topics
+                    item {
+                        Column {
                             Text(
-                                text = "🧠 Fixa विशेषताएँ व तुरंत पूछें:",
+                                text = "🧠 Fixa ज्ञान व त्वरित सवाल:",
                                 color = Color(0xFFE2E8F0),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                        }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                        val scrollState = rememberScrollState()
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(scrollState),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            viewModel.knowledgePrompts.forEach { item ->
-                                KnowledgePromptChip(
-                                    prompt = item,
-                                    onClick = { viewModel.sendMessage(item.prompt) }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // 4. Chat Messages Stream
-                items(messages) { message ->
-                    ChatMessageCard(
-                        message = message,
-                        onListen = { viewModel.ttsManager.speak(message.text) },
-                        onCopy = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Fixa", message.text))
-                            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
-                        },
-                        onShare = {
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, message.text)
-                                type = "text/plain"
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Share Fixa Answer"))
-                        }
-                    )
-                }
-
-                // 5. Loading Indicator
-                if (isLoading) {
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
+                            val scrollState = rememberScrollState()
+                            Row(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF1E293B))
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .fillMaxWidth()
+                                    .horizontalScroll(scrollState),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        color = Color(0xFF38BDF8),
-                                        strokeWidth = 2.dp
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "Fixa सोच रहा है और हल तैयार कर रहा है...",
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 13.sp
+                                viewModel.knowledgePrompts.forEach { item ->
+                                    KnowledgePromptChip(
+                                        prompt = item,
+                                        onClick = { viewModel.sendMessage(item.prompt) }
                                     )
                                 }
                             }
                         }
                     }
+
+                    // Chat Messages Stream
+                    items(messages) { message ->
+                        ChatMessageCard(
+                            message = message,
+                            onListen = { viewModel.ttsManager.speak(message.text) },
+                            onCopy = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Fixa", message.text))
+                                Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                            },
+                            onShare = {
+                                val sendIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, message.text)
+                                    type = "text/plain"
+                                }
+                                context.startActivity(Intent.createChooser(sendIntent, "Share Fixa Answer"))
+                            },
+                            onExecuteAction = { action ->
+                                viewModel.executeMessageAction(context, action, message.id)
+                            }
+                        )
+                    }
+
+                    // Loading Indicator
+                    if (isLoading) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color(0xFF1E293B))
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = Color(0xFF38BDF8),
+                                            strokeWidth = 2.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = "Fixa सोच रहा है और हल तैयार कर रहा है...",
+                                            color = Color(0xFF94A3B8),
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            } else {
+                // TAB 1: WhatsApp Automation & Device Action Studio
+                AutomationStudioTab(
+                    viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding)
+                )
             }
         }
 
@@ -547,7 +628,7 @@ fun FixaMainScreen(
                                         fontSize = 15.sp
                                     )
                                     Text(
-                                        text = "स्क्रीन पर तैरने वाला त्वरित चैट",
+                                        text = "स्क्रीन पर तैरने वाला त्वरित चैट व कमांड्स",
                                         color = Color(0xFF38BDF8),
                                         fontSize = 11.sp
                                     )
@@ -566,7 +647,7 @@ fun FixaMainScreen(
                         Spacer(modifier = Modifier.height(14.dp))
 
                         Text(
-                            text = "💡 आप इस बबल को पूरे स्क्रीन पर कहीं भी ड्रैग कर सकते हैं! बाहर तैरने के लिए 'Screen Floating Assistant' चालू करें।",
+                            text = "💡 कोई भी सवाल पूछें या कहें: \"Person A को WhatsApp पर 'मैंने खाना खा लिया' भेज दो\"",
                             color = Color(0xFFCBD5E1),
                             fontSize = 12.sp,
                             lineHeight = 16.sp
@@ -580,7 +661,7 @@ fun FixaMainScreen(
                             onValueChange = { quickQuery = it },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
-                                Text("त्वरित सवाल पूछें (Ask quick question)...", color = Color(0xFF64748B), fontSize = 12.sp)
+                                Text("सवाल पूछें या कमांड लिखें...", color = Color(0xFF64748B), fontSize = 12.sp)
                             },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF6366F1),
@@ -610,10 +691,248 @@ fun FixaMainScreen(
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Ask Fixa")
+                                Text("Execute with Fixa")
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Tab 2: Automation Studio for WhatsApp, Calling, Flashlight & Apps
+ */
+@Composable
+fun AutomationStudioTab(
+    viewModel: FixaViewModel,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var customRecipient by remember { mutableStateOf("Person A") }
+    var customMessage by remember { mutableStateOf("मैंने खाना खा लिया") }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Hero Card: WhatsApp Smart Messenger
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B).copy(alpha = 0.5f)),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF10B981), Color(0xFF34D399))
+                    )
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF25D366)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Chat,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "WhatsApp Direct Automation",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Fixa से किसी को भी तुरंत WhatsApp मैसेज भेजें",
+                                fontSize = 11.sp,
+                                color = Color(0xFFA7F3D0)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "प्राप्तकर्ता (Person Name या Phone Number):",
+                        color = Color(0xFFD1FAE5),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = customRecipient,
+                        onValueChange = { customRecipient = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Person Name or +919876543210", color = Color(0xFF6EE7B7).copy(alpha = 0.6f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF10B981),
+                            unfocusedBorderColor = Color(0xFF047857),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "संदेश (Message Text):",
+                        color = Color(0xFFD1FAE5),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = customMessage,
+                        onValueChange = { customMessage = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("संदेश लिखें...", color = Color(0xFF6EE7B7).copy(alpha = 0.6f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF10B981),
+                            unfocusedBorderColor = Color(0xFF047857),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = {
+                            val action = FixaAction.WhatsAppMessage(
+                                recipient = customRecipient.ifBlank { "Contact" },
+                                message = customMessage.ifBlank { "मैंने खाना खा लिया" }
+                            )
+                            FixaActionManager.executeAction(context, action)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "WhatsApp पर भेजें (Send on WhatsApp)",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Quick Automation Action Shortcuts
+        item {
+            Text(
+                text = "⚡ त्वरित ऑटोमेशन कमांड्स (One-Tap Commands):",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        items(viewModel.automationShortcuts) { shortcut ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        viewModel.sendMessage(shortcut.command)
+                        viewModel.setSelectedTab(0)
+                    },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when (shortcut.iconName) {
+                                    "WhatsApp" -> Color(0xFF25D366).copy(alpha = 0.2f)
+                                    "Call" -> Color(0xFF3B82F6).copy(alpha = 0.2f)
+                                    "YouTube" -> Color(0xFFEF4444).copy(alpha = 0.2f)
+                                    "Flashlight" -> Color(0xFFF59E0B).copy(alpha = 0.2f)
+                                    else -> Color(0xFF6366F1).copy(alpha = 0.2f)
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val icon: ImageVector = when (shortcut.iconName) {
+                            "WhatsApp" -> Icons.AutoMirrored.Filled.Chat
+                            "Call" -> Icons.Default.Call
+                            "YouTube" -> Icons.Default.PlayArrow
+                            "Flashlight" -> Icons.Default.FlashlightOn
+                            "Timer" -> Icons.Default.Alarm
+                            "Settings" -> Icons.Default.Settings
+                            else -> Icons.Default.Search
+                        }
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = when (shortcut.iconName) {
+                                "WhatsApp" -> Color(0xFF25D366)
+                                "Call" -> Color(0xFF60A5FA)
+                                "YouTube" -> Color(0xFFF87171)
+                                "Flashlight" -> Color(0xFFFBBF24)
+                                else -> Color(0xFF818CF8)
+                            },
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = shortcut.hindiTitle,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = shortcut.command,
+                            color = Color(0xFF94A3B8),
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Run",
+                        tint = Color(0xFF38BDF8),
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
@@ -922,7 +1241,8 @@ fun ChatMessageCard(
     message: ChatMessage,
     onListen: () -> Unit,
     onCopy: () -> Unit,
-    onShare: () -> Unit
+    onShare: () -> Unit,
+    onExecuteAction: (FixaAction) -> Unit
 ) {
     val isUser = message.sender == MessageSender.USER
 
@@ -992,6 +1312,16 @@ fun ChatMessageCard(
                         lineHeight = 20.sp
                     )
 
+                    // Action Trigger Card if command detected
+                    if (message.action != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        ActionExecutionButton(
+                            action = message.action,
+                            isExecuted = message.actionExecuted,
+                            onClick = { onExecuteAction(message.action) }
+                        )
+                    }
+
                     if (!isUser) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Row(
@@ -1045,6 +1375,57 @@ fun ChatMessageCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ActionExecutionButton(
+    action: FixaAction,
+    isExecuted: Boolean,
+    onClick: () -> Unit
+) {
+    val buttonColor = when (action) {
+        is FixaAction.WhatsAppMessage -> Color(0xFF25D366)
+        is FixaAction.CallPhone -> Color(0xFF2563EB)
+        is FixaAction.ToggleFlashlight -> Color(0xFFF59E0B)
+        is FixaAction.OpenApp -> Color(0xFF9333EA)
+        else -> Color(0xFF06B6D4)
+    }
+
+    val actionLabel = when (action) {
+        is FixaAction.WhatsAppMessage -> "WhatsApp पर भेजें (${action.recipient})"
+        is FixaAction.CallPhone -> "कॉल डायल करें (${action.numberOrName})"
+        is FixaAction.SendSms -> "SMS भेजें (${action.number})"
+        is FixaAction.ToggleFlashlight -> if (action.enable) "टॉर्च चालू करें" else "टॉर्च बंद करें"
+        is FixaAction.OpenApp -> "${action.appName} खोलें"
+        is FixaAction.WebSearch -> "Google पर सर्च करें"
+        is FixaAction.SetTimer -> "टाइमर लगाएं"
+    }
+
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (isExecuted) "✓ $actionLabel (भेजा गया)" else actionLabel,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+            )
         }
     }
 }

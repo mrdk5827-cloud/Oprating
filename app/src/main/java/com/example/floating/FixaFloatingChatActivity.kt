@@ -158,37 +158,51 @@ fun FloatingChatDialog(
         }
     }
 
-    val quickQuestions = listOf(
-        "ट्रांजिस्टर कैसे काम करता है?",
-        "Explain Quantum Computing simply",
-        "Arduino vs ESP32 अंतर",
-        "ब्लैक होल का रहस्य क्या है?"
-    )
+        val quickQuestions = listOf(
+            "Person A ko WhatsApp par 'Maine khana kha liya' bhejo",
+            "ट्रांजिस्टर कैसे काम करता है?",
+            "Explain Quantum Computing simply",
+            "Arduino vs ESP32 अंतर"
+        )
 
-    fun sendMessage(textToSend: String) {
-        val query = textToSend.trim()
-        if (query.isBlank() || isLoading) return
+        fun sendMessage(textToSend: String) {
+            val query = textToSend.trim()
+            if (query.isBlank() || isLoading) return
 
-        messages.add(ChatMessage(text = query, sender = MessageSender.USER))
-        inputText = ""
-        isLoading = true
+            messages.add(ChatMessage(text = query, sender = MessageSender.USER))
+            inputText = ""
 
-        coroutineScope.launch {
-            val responseText = geminiService.generateFixaResponse(
-                prompt = query,
-                history = messages,
-                languageMode = selectedLanguage
-            )
-            messages.add(
-                ChatMessage(
-                    text = responseText,
-                    sender = MessageSender.FIXA,
-                    language = selectedLanguage
+            // Check if actionable command
+            val detectedAction = com.example.automation.FixaActionManager.parseAction(query)
+            if (detectedAction != null) {
+                messages.add(
+                    ChatMessage(
+                        text = "🚀 **Fixa कमांड पहचानी गई!**\n\n${detectedAction.hindiDescription}\n\nनीचे दिए गए बटन पर टैप करके तुरंत निष्पादित करें।",
+                        sender = MessageSender.FIXA,
+                        language = selectedLanguage,
+                        action = detectedAction
+                    )
                 )
-            )
-            isLoading = false
+                return
+            }
+
+            isLoading = true
+            coroutineScope.launch {
+                val responseText = geminiService.generateFixaResponse(
+                    prompt = query,
+                    history = messages,
+                    languageMode = selectedLanguage
+                )
+                messages.add(
+                    ChatMessage(
+                        text = responseText,
+                        sender = MessageSender.FIXA,
+                        language = selectedLanguage
+                    )
+                )
+                isLoading = false
+            }
         }
-    }
 
     // Floating semi-transparent backdrop
     Box(
@@ -352,6 +366,9 @@ fun FloatingChatDialog(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 clipboard.setPrimaryClip(ClipData.newPlainText("Fixa Answer", msg.text))
                                 Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                            },
+                            onExecuteAction = { action ->
+                                com.example.automation.FixaActionManager.executeAction(context, action)
                             }
                         )
                     }
@@ -507,7 +524,8 @@ fun FloatingChatDialog(
 fun FloatingMessageBubble(
     message: ChatMessage,
     onListen: () -> Unit,
-    onCopy: () -> Unit
+    onCopy: () -> Unit,
+    onExecuteAction: (com.example.automation.FixaAction) -> Unit
 ) {
     val isUser = message.sender == MessageSender.USER
 
@@ -554,6 +572,29 @@ fun FloatingMessageBubble(
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )
+
+                    if (message.action != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        androidx.compose.material3.Button(
+                            onClick = { onExecuteAction(message.action) },
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = when (message.action) {
+                                    is com.example.automation.FixaAction.WhatsAppMessage -> Color(0xFF25D366)
+                                    is com.example.automation.FixaAction.CallPhone -> Color(0xFF2563EB)
+                                    else -> Color(0xFF06B6D4)
+                                }
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "निष्पादित करें / Execute",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
 
                     if (!isUser) {
                         Spacer(modifier = Modifier.height(8.dp))
