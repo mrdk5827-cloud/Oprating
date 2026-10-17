@@ -1,6 +1,0 @@
-{
-  "name": "Fixa",
-  "description": "Fixa - Floating AI Assistant that answers questions about science, components, complex problems, and world knowledge in Hindi and English.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
