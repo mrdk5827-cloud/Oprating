@@ -1,48 +1,58 @@
-# Fixa - Floating AI Assistant & Automation Engine 🤖✨
+# 🔮 Fixa AI (फिक्सा) - Floating Screen AI Assistant
 
-**Fixa** is an intelligent, floating on-screen AI assistant for Android built with Jetpack Compose, Gemini 3.5, and native device automation. It answers questions on electronics components, science, math, coding, and world knowledge, while also executing real-world phone actions like WhatsApp messaging, phone calls, and app controls.
+[![Android](https://img.shields.io/badge/Platform-Android%2024%2B-brightgreen.svg)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Language-Kotlin%202.2-blue.svg)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blueviolet.svg)](https://developer.android.com/jetpack/compose)
+[![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini%203.5%20Flash-cyan.svg)](https://ai.google.dev)
+[![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 
----
-
-## 🌟 मुख्य विशेषताएं (Key Features)
-
-### 1. Screen Floating Assistant (स्क्रीन पर तैरने वाला बबल)
-- **Floating Overlay**: एक बार चालू करने पर Fixa का बबल आपकी स्क्रीन पर किसी भी ऐप के ऊपर तैरने लगता है।
-- **Drag & Snap**: अपनी उंगली से स्क्रीन पर कहीं भी ड्रैग करें।
-- **Quick Floating Window**: बबल पर टैप करते ही स्क्रीन के ऊपर ही एक फ्लोटिंग चैट और कमांड बॉक्स खुल जाता है।
-
-### 2. WhatsApp & Phone Automation (व्हाट्सएप व फोन ऑटोमेशन)
-- **WhatsApp Commands**: "Person A को WhatsApp पर 'मैंने खाना खा लिया' मैसेज कर दो" बोलने या लिखने पर Fixa तुरंत WhatsApp खोलकर संदेश तैयार कर देता है।
-- **Smart Calling**: किसी को भी सीधे कॉल डायल करें ("Call 9876543210")।
-- **Device Controls**: टॉर्च/फ्लैशलाइट चालू-बंद करना, टाइमर लगाना, YouTube/Camera/Settings खोलना।
-
-### 3. Components & Deep Problem Solving (कॉम्पोनेन्ट्स व जटिल ज्ञान)
-- **Electronics & Hardware**: BJT vs MOSFET ट्रांजिस्टर, Arduino vs ESP32 vs Raspberry Pi, कैपेसिटर्स, डायोड्स, सेंसर्स और सर्किट डिजाइन।
-- **Complex STEM**: क्वांटम कंप्यूटिंग, टाइम डाइलेशन, ब्लैक होल, उच्च गणित और लॉजिक पहेलियों का चरण-दर-चरण (Step-by-step) समाधान।
-
-### 4. Bilingual Support (हिंदी + English + Hinglish)
-- हिंदी, English और Hinglish में सहज बातचीत।
-- **Voice Speech & Text-To-Speech**: माइक से बोलकर सवाल पूछें और Fixa की आवाज़ में उत्तर सुनें।
+> **Fixa (फिक्सा)** is an intelligent, floating on-screen AI companion designed for Android. It floats on top of your screen over any application, communicates fluently in **Hindi, English, and Hinglish**, solves complex technical & mathematical questions, and executes instant device automation such as sending WhatsApp messages with a single command!
 
 ---
 
-## 🚀 GitHub Actions पर कैसे रन करें (How to Run on GitHub)
+## ✨ Features (मुख्य विशेषताएं)
 
-इस प्रोजेक्ट में `.github/workflows/android.yml` पहले से कॉन्फ़िगर किया गया है:
-1. जब भी आप इस प्रोजेक्ट को GitHub पर पुश करेंगे, GitHub Actions अपने आप कोड को कंपाइल करेगा।
-2. यूनिट व रोबोलेक्ट्रिक टेस्ट अपने आप रन होंगे।
-3. **Downloadable APK**: GitHub Actions के **Artifacts** टैब में जाकर आप सीधे `Fixa-AI-Assistant-APK` डाउनलोड कर सकते हैं और अपने फ़ोन में इंस्टॉल कर सकते हैं!
+1. **🫧 Floating Screen Bubble (फ्लोटिंग स्क्रीन असिस्टेंट):**
+   - Floats effortlessly on top of any active app (WhatsApp, YouTube, Chrome, Games).
+   - Draggable anywhere on the screen with magnetic edge snapping.
+   - Tap to expand the interactive Fixa command hub right over your screen.
+
+2. **📲 Smart WhatsApp & Device Automator (व्हाट्सएप ऑटोमेशन):**
+   - Natural language commands like:
+     - *"person A ko whatsapp per jakar ye maine khana kha liye ye message kar do"*
+     - *"WhatsApp Mohan ko message bhejo: kal subah milte hain"*
+     - *"Call Mummy"*
+     - *"Open Camera / Calculator / YouTube"*
+   - Automatically formats recipient, prepares payload, and launches WhatsApp directly.
+
+3. **🗣️ Bilingual Speech & Voice (हिंदी और English आवाज़):**
+   - Voice input (Speech-to-Text) with auto language detection.
+   - Natural spoken responses (Text-to-Speech) in both Indian Hindi (`hi-IN`) and English (`en-US`).
+   - One-tap audio read-back on any answer.
+
+4. **🔬 Omniscient Knowledge & Component Solver (गहन ज्ञान व कंपोनेंट सॉल्वर):**
+   - Solves complicated mathematics equations step-by-step.
+   - Comprehensive electronics & robotics component library (Arduino, ESP32, Resistors, Transistors, ICs, Sensors, Microcontrollers).
+   - Science, programming, and general daily questions.
+
+5. **🌐 Interactive Companion Web Page & GitHub Pages Ready:**
+   - Standalone responsive web dashboard (`index.html`) with canvas particle animations & interactive orb.
+   - Built-in In-App Web View companion.
 
 ---
 
-## 💻 Local Build (Android Studio)
-1. रिपॉजिटरी क्लोन करें:
-   ```bash
-   git clone https://github.com/<your-username>/fixa-ai-assistant.git
-   ```
-2. Android Studio में **Open Existing Project** करें।
-3. बिल्ड करें:
-   ```bash
-   gradle assembleDebug
-   ```
-4. APK लोकेशन: `app/build/outputs/apk/debug/app-debug.apk`
+## 🚀 How to Run on Android
+
+1. Open project in **Android Studio**.
+2. To use live Google Gemini AI, configure `GEMINI_API_KEY` in your `.env` or the AI Studio Secrets panel.
+3. Build and install the APK on an Android device (API 24+).
+4. Launch **Fixa AI**, grant **Display over other apps** (System Overlay) permission when prompted to enable screen floating!
+
+---
+
+## 📱 Tech Stack
+- **Architecture:** Clean MVVM with Kotlin Coroutines & StateFlow
+- **UI:** Jetpack Compose + Material 3 Dark Cybernetic Theme
+- **Networking:** Retrofit + Moshi + OkHttp
+- **AI Core:** Google Gemini 3.5 Flash (`gemini-3.5-flash`)
+- **System Services:** Android WindowManager Overlay & Foreground Service

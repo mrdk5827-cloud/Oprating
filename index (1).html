@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FIXA AI - Floating Smart Assistant</title>
+  <style>
+    :root {
+      --bg: #0A0E1A;
+      --card-bg: rgba(18, 26, 45, 0.85);
+      --card-border: rgba(0, 229, 255, 0.25);
+      --primary: #00E5FF;
+      --secondary: #7C4DFF;
+      --accent: #FF4081;
+      --text: #F0F4F8;
+      --text-dim: #94A3B8;
+      --glow: 0 0 24px rgba(0, 229, 255, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated background canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Header & Badge */
+    header {
+      text-align: center;
+      padding: 20px 0 30px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 50px;
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px var(--primary); }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF 20%, var(--primary) 70%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .tagline {
+      font-size: 17px;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto 24px;
+      line-height: 1.5;
+    }
+
+    /* Orb Interactive Canvas Showcase */
+    .orb-showcase {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0 40px;
+      position: relative;
+    }
+
+    .orb-canvas-container {
+      width: 220px;
+      height: 220px;
+      position: relative;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #orb-canvas {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+    }
+
+    .orb-status {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Interactive Demo Card */
+    .demo-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .demo-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .demo-title h3 {
+      font-size: 18px;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      display: flex;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--primary);
+      color: #0A0E1A;
+      font-weight: 700;
+    }
+
+    /* Chat bubble log */
+    .chat-box {
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--secondary), #536DFE);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.fixa {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      color: #FFF;
+      border-bottom-left-radius: 4px;
+    }
+
+    .action-card {
+      margin-top: 10px;
+      background: rgba(37, 211, 102, 0.15);
+      border: 1px solid #25D366;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .action-info {
+      font-size: 13px;
+      color: #A7F3D0;
+    }
+
+    .action-btn {
+      background: #25D366;
+      color: #000;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Prompt suggestion chips */
+    .chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 0 6px;
+    }
+
+    .chip {
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip:hover, .chip:active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    /* Input row */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #FFF;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .input-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .send-btn {
+      background: var(--primary);
+      color: #0A0E1A;
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.2s, border 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(0, 229, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+      color: var(--primary);
+    }
+
+    .feature-card h4 {
+      font-size: 16px;
+      margin-bottom: 6px;
+      color: #FFF;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 0 10px;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="container">
+    <header>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>FIXA SCREEN AI ASSISTANT</span>
+      </div>
+      <h1>फिक्सा (FIXA) AI</h1>
+      <p class="tagline">
+        आपका पर्सनल फ्लोटिंग AI असिस्टेंट जो स्क्रीन पर फ्लोट करता है, हिंदी और इंग्लिश में हर सवाल का जवाब देता है, और सीधे WhatsApp मैसेज भेजता है।
+      </p>
+    </header>
+
+    <div class="orb-showcase">
+      <div class="orb-canvas-container" id="orb-trigger" title="Tap Fixa Orb to Interact">
+        <canvas id="orb-canvas" width="220" height="220"></canvas>
+      </div>
+      <div class="orb-status" id="orb-status-text">⚡ FIXA READY • ऑनलाइन</div>
+    </div>
+
+    <!-- Live Interactive Simulator -->
+    <div class="demo-card">
+      <div class="demo-title">
+        <h3>✨ Fixa Live Simulator (सिम्युलेटर)</h3>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-hi">हिंदी</button>
+          <button class="lang-btn" id="btn-en">English</button>
+        </div>
+      </div>
+
+      <div class="chat-box" id="chat-box">
+        <div class="msg fixa">
+          नमस्ते! मैं <strong>Fixa</strong> हूँ। आप मुझसे दुनिया का कोई भी सवाल पूछ सकते हैं या WhatsApp मैसेज भेजने को कह सकते हैं! नीचे दिए गए किसी भी सुझाव पर टैप करें।
+        </div>
+      </div>
+
+      <div class="chips-row">
+        <button class="chip" onclick="quickSend('person A ko whatsapp per jakar ye maine khana kha liye ye message kar do')">
+          💬 WhatsApp Message Demo
+        </button>
+        <button class="chip" onclick="quickSend('Arduino microcontroller kya hota hai?')">
+          ⚡ Component Explainer
+        </button>
+        <button class="chip" onclick="quickSend('Solve equation: 3x + 12 = 45')">
+          🧮 Math Solver
+        </button>
+        <button class="chip" onclick="quickSend('Transistor vs Diode difference')">
+          🔬 Electronics
+        </button>
+      </div>
+
+      <div class="input-row">
+        <input type="text" id="user-input" placeholder="Fixa se kuch bhi pucho (Hindi / English)..." onkeydown="if(event.key==='Enter') handleSend()">
+        <button class="send-btn" onclick="handleSend()">Send</button>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🫧</div>
+        <h4>Floating Screen Bubble</h4>
+        <p>एक बार ऑन करने पर यह किसी भी ऐप के ऊपर स्क्रीन पर फ्लोट करता है। कभी भी टैप करके तुरंत बात करें।</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📲</div>
+        <h4>WhatsApp & App Automation</h4>
+        <p>बस बोलें "person A ko message bhejo" और Fixa तुरंत WhatsApp में मैसेज तैयार करके भेज देगा।</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h4>Bilingual Intelligence</h4>
+        <p>हिंदी, English और Hinglish में धाराप्रवाह समझता है और दोनों भाषाओं में टेक्स्ट व आवाज़ में उत्तर देता है।</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h4>Deep Component & Math Solver</h4>
+        <p>इलेक्ट्रॉनिक्स, रोबोटिक्स, कोडिंग, साइंस और कठिन गणितीय समीकरणों के स्टेप-बाय-स्टेप सटीक हल।</p>
+      </div>
+    </div>
+
+    <footer>
+      Fixa AI Assistant • Designed for Android Floating Screen & GitHub Deployment • Powered by Gemini AI
+    </footer>
+  </div>
+
+  <script>
+    // --- Canvas Animated Background ---
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let width = bgCanvas.width = window.innerWidth;
+    let height = bgCanvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = bgCanvas.width = window.innerWidth;
+      height = bgCanvas.height = window.innerHeight;
+    });
+
+    const particles = [];
+    for (let i = 0; i < 45; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        size: Math.random() * 2 + 1,
+        color: Math.random() > 0.5 ? '#00E5FF' : '#7C4DFF'
+      });
+    }
+
+    function renderBg() {
+      bgCtx.clearRect(0, 0, width, height);
+      for (let i = 0; i < particles.length; i++) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        bgCtx.fillStyle = p.color;
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        bgCtx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          let p2 = particles[j];
+          let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 110) {
+            bgCtx.strokeStyle = `rgba(0, 229, 255, ${0.15 * (1 - dist / 110)})`;
+            bgCtx.lineWidth = 0.6;
+            bgCtx.beginPath();
+            bgCtx.moveTo(p.x, p.y);
+            bgCtx.lineTo(p2.x, p2.y);
+            bgCtx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(renderBg);
+    }
+    renderBg();
+
+    // --- Interactive Fixa Glowing Orb Canvas ---
+    const orbCanvas = document.getElementById('orb-canvas');
+    const orbCtx = orbCanvas.getContext('2d');
+    let orbAngle = 0;
+    let orbPulse = 0;
+
+    function renderOrb() {
+      orbCtx.clearRect(0, 0, 220, 220);
+      const cx = 110, cy = 110;
+      orbAngle += 0.02;
+      orbPulse = Math.sin(orbAngle * 2) * 5;
+
+      // Outer radial glow
+      const grad = orbCtx.createRadialGradient(cx, cy, 20, cx, cy, 95 + orbPulse);
+      grad.addColorStop(0, 'rgba(0, 229, 255, 0.8)');
+      grad.addColorStop(0.4, 'rgba(124, 77, 255, 0.5)');
+      grad.addColorStop(0.8, 'rgba(255, 64, 129, 0.2)');
+      grad.addColorStop(1, 'rgba(10, 14, 26, 0)');
+
+      orbCtx.fillStyle = grad;
+      orbCtx.beginPath();
+      orbCtx.arc(cx, cy, 100, 0, Math.PI * 2);
+      orbCtx.fill();
+
+      // Rotating dashed energy rings
+      orbCtx.save();
+      orbCtx.translate(cx, cy);
+      orbCtx.rotate(orbAngle);
+      orbCtx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+      orbCtx.lineWidth = 2;
+      orbCtx.setLineDash([12, 8]);
+      orbCtx.beginPath();
+      orbCtx.arc(0, 0, 68 + orbPulse * 0.5, 0, Math.PI * 2);
+      orbCtx.stroke();
+      orbCtx.restore();
+
+      orbCtx.save();
+      orbCtx.translate(cx, cy);
+      orbCtx.rotate(-orbAngle * 1.5);
+      orbCtx.strokeStyle = 'rgba(255, 64, 129, 0.7)';
+      orbCtx.lineWidth = 2;
+      orbCtx.setLineDash([8, 12]);
+      orbCtx.beginPath();
+      orbCtx.arc(0, 0, 52 - orbPulse * 0.3, 0, Math.PI * 2);
+      orbCtx.stroke();
+      orbCtx.restore();
+
+      // Core Sphere
+      const coreGrad = orbCtx.createRadialGradient(cx - 10, cy - 10, 5, cx, cy, 38);
+      coreGrad.addColorStop(0, '#FFFFFF');
+      coreGrad.addColorStop(0.3, '#00E5FF');
+      coreGrad.addColorStop(0.8, '#7C4DFF');
+      coreGrad.addColorStop(1, '#0A0E1A');
+
+      orbCtx.fillStyle = coreGrad;
+      orbCtx.beginPath();
+      orbCtx.arc(cx, cy, 38, 0, Math.PI * 2);
+      orbCtx.fill();
+
+      requestAnimationFrame(renderOrb);
+    }
+    renderOrb();
+
+    // --- Interactive Chat & Action Logic ---
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const orbStatusText = document.getElementById('orb-status-text');
+
+    function addMessage(sender, html) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${sender}`;
+      msg.innerHTML = html;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function quickSend(text) {
+      userInput.value = text;
+      handleSend();
+    }
+
+    function handleSend() {
+      const q = userInput.value.trim();
+      if (!q) return;
+      addMessage('user', q);
+      userInput.value = '';
+
+      orbStatusText.innerText = '⚡ FIXA THINKING • सोच रहा है...';
+
+      setTimeout(() => {
+        orbStatusText.innerText = '⚡ FIXA SPEAKING • उत्तर दे रहा है';
+        respond(q);
+        setTimeout(() => {
+          orbStatusText.innerText = '⚡ FIXA READY • ऑनलाइन';
+        }, 2000);
+      }, 600);
+    }
+
+    function respond(text) {
+      const lower = text.toLowerCase();
+
+      // WhatsApp Detection
+      if (lower.includes('whatsapp') || lower.includes('wattsapp') || lower.includes('message')) {
+        let msgBody = "maine khana kha liya";
+        let targetPerson = "Person A";
+        if (lower.includes('khana')) msgBody = "Maine khana kha liya";
+        if (lower.includes('person a')) targetPerson = "Person A";
+
+        addMessage('fixa', `
+          बिलकुल! मैंने <strong>${targetPerson}</strong> के लिए WhatsApp मैसेज तैयार कर दिया है: <em>"${msgBody}"</em>
+          <div class="action-card">
+            <div class="action-info">
+              <strong>WhatsApp Action Ready</strong><br>
+              Recipient: ${targetPerson} • Text: "${msgBody}"
+            </div>
+            <button class="action-btn" onclick="alert('WhatsApp launch action simulated! In the Android app, this directly launches WhatsApp.')">
+              Send Now 🚀
+            </button>
+          </div>
+        `);
+      } else if (lower.includes('arduino') || lower.includes('microcontroller') || lower.includes('component')) {
+        addMessage('fixa', `
+          <strong>Arduino Uno Microcontroller:</strong><br>
+          • <strong>Microcontroller:</strong> ATmega328P (8-bit AVR)<br>
+          • <strong>Operating Voltage:</strong> 5V (Input: 7-12V DC)<br>
+          • <strong>Digital I/O Pins:</strong> 14 (6 PWM outputs)<br>
+          • <strong>Analog Input Pins:</strong> 6 (10-bit ADC)<br>
+          • <strong>Flash Memory:</strong> 32 KB<br>
+          <em>यह रोबोटिक्स, सेंसर रीडिंग और ऑटोमेशन प्रोजेक्ट्स के लिए सबसे लोकप्रिय कंपोनेंट है!</em>
+        `);
+      } else if (lower.includes('solve') || lower.includes('equation') || lower.includes('3x')) {
+        addMessage('fixa', `
+          <strong>Math Solution:</strong><br>
+          समीकरण: <code>3x + 12 = 45</code><br>
+          1. दोनों पक्षों से 12 घटाएं: <code>3x = 45 - 12</code> &rarr; <code>3x = 33</code><br>
+          2. दोनों पक्षों को 3 से विभाजित करें: <code>x = 33 / 3</code><br>
+          <strong>उत्तर: x = 11 ✅</strong>
+        `);
+      } else {
+        addMessage('fixa', `
+          मैं <strong>Fixa</strong> हूँ, आपके हर सवाल का हल जानता हूँ। Android ऐप में आप मुझे स्क्रीन पर फ्लोट करा सकते हैं और जब चाहें स्क्रीन के किसी भी हिस्से से बात कर सकते हैं!
+        `);
+      }
+    }
+  </script>
+</body>
+</html>

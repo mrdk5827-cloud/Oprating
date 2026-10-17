@@ -1,0 +1,6 @@
+{
+  "name": "Fixa AI",
+  "description": "Floating AI Assistant in Hindi & English with screen overlay, WhatsApp actions, and deep problem solving.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
