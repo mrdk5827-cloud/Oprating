@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Floating Outer Glow Aura -->
+    <path
+        android:fillColor="#3338BDF8"
+        android:pathData="M54,54m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0" />
+
+    <!-- Orbital Ring angled around AI core -->
+    <path
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M31,48 C31,38 77,38 77,60 C77,70 31,70 31,48 Z">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="31"
+                android:startY="40"
+                android:endX="77"
+                android:endY="68"
+                android:type="linear">
+                <item android:color="#38BDF8" android:offset="0.0" />
+                <item android:color="#A855F7" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Main AI Orb Core -->
+    <path android:pathData="M54,54m-17,0a17,17 0,1 1,34 0a17,17 0,1 1,-34 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="40"
+                android:startY="40"
+                android:endX="68"
+                android:endY="68"
+                android:type="linear">
+                <item android:color="#00F0FF" android:offset="0.0" />
+                <item android:color="#6366F1" android:offset="0.6" />
+                <item android:color="#9333EA" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Core Sparkle / Intelligence Eye -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,43 L56.2,51.8 L65,54 L56.2,56.2 L54,65 L51.8,56.2 L43,54 L51.8,51.8 Z" />
+
+    <!-- Satellite Floating Node 1 -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M34,42m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
+
+    <!-- Satellite Floating Node 2 -->
+    <path
+        android:fillColor="#F472B6"
+        android:pathData="M74,66m-2.2,0a2.2,2.2 0,1 1,4.4 0a2.2,2.2 0,1 1,-4.4 0" />
+
+    <!-- Top micro spark -->
+    <path
+        android:fillColor="#FACC15"
+        android:pathData="M64,36m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+</vector>
